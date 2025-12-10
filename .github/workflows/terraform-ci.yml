@@ -1,0 +1,216 @@
+name: Terraform Module CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  terraform-format:
+    name: Terraform Format Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.1
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+  terraform-syntax:
+    name: Terraform Syntax Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.1
+
+      - name: Terraform Init
+        run: terraform init -backend=false
+
+  tflint:
+    name: TFLint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: v0.50.0
+
+      - name: Init TFLint
+        run: tflint --init
+
+      - name: Run TFLint
+        run: tflint --config=.tflint.hcl
+
+  tfsec:
+    name: TFSec Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          soft_fail: true
+
+  checkov:
+    name: Checkov Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          framework: terraform
+          quiet: true
+          soft_fail: true
+
+  docs:
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Render terraform docs
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          working-dir: .
+          output-file: README.md
+          output-method: inject
+          git-push: "true"
+          git-commit-message: "docs: auto-generate module documentation"
+
+  test-examples:
+    name: Test Examples
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example: [basic, complete]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.1
+
+      - name: Terraform Init
+        working-directory: examples/${{ matrix.example }}
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: examples/${{ matrix.example }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: examples/${{ matrix.example }}
+        run: terraform plan
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [terraform-format, terraform-syntax, tflint, test-examples]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+          # Parse version
+          VERSION=${LATEST_TAG#v}
+          IFS='.' read -r major minor patch <<< "$VERSION"
+
+          # Check for breaking changes
+          if [[ "${{ github.event.head_commit.message }}" =~ BREAKING\ CHANGE || "${{ github.event.head_commit.message }}" =~ \! ]]; then
+            NEW_MAJOR=$((major + 1))
+            NEW_TAG="v${NEW_MAJOR}.0.0"
+            echo "version_type=major" >> $GITHUB_OUTPUT
+          else
+            NEW_PATCH=$((patch + 1))
+            NEW_TAG="v${major}.${minor}.${NEW_PATCH}"
+            echo "version_type=patch" >> $GITHUB_OUTPUT
+          fi
+
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create and push tag
+        if: contains(github.event.head_commit.message, '[release]')
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a ${{ steps.get_tag.outputs.new_tag }} -m "Release ${{ steps.get_tag.outputs.new_tag }}"
+          git push origin ${{ steps.get_tag.outputs.new_tag }}
+
+      - name: Create GitHub Release
+        if: contains(github.event.head_commit.message, '[release]')
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_tag.outputs.new_tag }}
+          name: Release ${{ steps.get_tag.outputs.new_tag }}
+          body: |
+            ## Changes
+
+            ${{ github.event.head_commit.message }}
+
+            ---
+
+            **Version Type:** ${{ steps.get_tag.outputs.version_type }}
+            **Previous Version:** ${{ steps.get_tag.outputs.latest_tag }}
+
+            ## Usage
+
+            \`\`\`hcl
+            module "example" {
+              source = "git::https://github.com/${{ github.repository }}.git?ref=${{ steps.get_tag.outputs.new_tag }}"
+
+              project_name = "myproject"
+              environment  = "production"
+            }
+            \`\`\`
+          draft: false
+          prerelease: false
