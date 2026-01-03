@@ -2,6 +2,8 @@
 
 This example shows the simplest usage of the frontend module without a custom domain.
 
+**Note:** The module requires the `aws.us_east_1` provider to be configured (for ACM certificate support), even when not using a custom domain. This provider is passed to the module but won't be used unless you add `domain_name`.
+
 ## What it creates
 
 - S3 bucket for website hosting

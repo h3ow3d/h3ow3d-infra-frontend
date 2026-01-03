@@ -16,8 +16,18 @@ provider "aws" {
   region = "eu-west-2"
 }
 
+# Provider for ACM certificate (required by module even if not using custom domain)
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
+
 module "frontend" {
   source = "../.."
+
+  providers = {
+    aws.us_east_1 = aws.us_east_1
+  }
 
   project_name = "my-app"
   environment  = "dev"
