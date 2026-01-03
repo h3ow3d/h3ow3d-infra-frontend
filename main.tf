@@ -1,10 +1,10 @@
 locals {
   bucket_name = "${var.project_name}-${var.environment}-site"
-  
+
   # Determine certificate ARN: use provided one, or create new one if domain is specified
-  use_custom_domain    = var.domain_name != ""
-  certificate_arn      = var.acm_certificate_arn != null ? var.acm_certificate_arn : (local.use_custom_domain ? aws_acm_certificate.domain[0].arn : null)
-  wait_for_validation  = local.use_custom_domain && var.acm_certificate_arn == null
+  use_custom_domain   = var.domain_name != ""
+  certificate_arn     = var.acm_certificate_arn != null ? var.acm_certificate_arn : (local.use_custom_domain ? aws_acm_certificate.domain[0].arn : null)
+  wait_for_validation = local.use_custom_domain && var.acm_certificate_arn == null
 }
 
 # ACM Certificate for custom domain (created in us-east-1 for CloudFront)

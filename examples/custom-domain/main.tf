@@ -35,9 +35,9 @@ module "frontend" {
     aws.us_east_1 = aws.us_east_1
   }
 
-  project_name   = "my-app"
-  environment    = "production"
-  
+  project_name = "my-app"
+  environment  = "production"
+
   # Custom domain configuration
   domain_name    = "app.example.com"
   hosted_zone_id = data.aws_route53_zone.main.zone_id

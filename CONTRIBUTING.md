@@ -117,7 +117,7 @@ output "example_id" {
 ```hcl
 resource "aws_example" "main" {
   name = "${var.project_name}-${var.environment}-example"
-  
+
   # Use merge for tags
   tags = merge(var.tags, {
     Name = "${var.project_name}-${var.environment}-example"
@@ -127,18 +127,18 @@ resource "aws_example" "main" {
 
 ### Best Practices
 
-✅ Always provide variable descriptions  
-✅ Use sensible defaults where possible  
-✅ Output all resource IDs/ARNs that might be needed  
-✅ Use `merge()` for tags  
-✅ Follow AWS naming conventions  
-✅ Enable encryption by default  
-✅ Use security best practices  
+✅ Always provide variable descriptions
+✅ Use sensible defaults where possible
+✅ Output all resource IDs/ARNs that might be needed
+✅ Use `merge()` for tags
+✅ Follow AWS naming conventions
+✅ Enable encryption by default
+✅ Use security best practices
 
 ## Versioning
 
 - **MAJOR** (v1.0.0 → v2.0.0): Breaking changes (incompatible API)
-- **MINOR** (v1.0.0 → v1.1.0): New features (backward compatible) 
+- **MINOR** (v1.0.0 → v1.1.0): New features (backward compatible)
 - **PATCH** (v1.0.0 → v1.0.1): Bug fixes
 
 ## Questions?
