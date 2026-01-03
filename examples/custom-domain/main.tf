@@ -1,5 +1,5 @@
-# Complete Example - Frontend hosting with custom domain
-# Includes ACM certificate, DNS validation, and Route53 A record
+# Custom Domain Example
+# Shows how to add a custom domain to your frontend
 
 terraform {
   required_version = ">= 1.14.1"
@@ -37,19 +37,25 @@ module "frontend" {
 
   project_name   = "my-app"
   environment    = "production"
+  
+  # Custom domain configuration
   domain_name    = "app.example.com"
   hosted_zone_id = data.aws_route53_zone.main.zone_id
 
   tags = {
-    Example   = "complete"
-    ManagedBy = "terraform"
-    Owner     = "platform-team"
+    Example = "custom-domain"
   }
 }
 
-output "s3_bucket_name" {
-  description = "S3 bucket for website files"
-  value       = module.frontend.s3_bucket_name
+# Outputs
+output "website_url" {
+  description = "Custom domain URL"
+  value       = module.frontend.website_url
+}
+
+output "certificate_arn" {
+  description = "ACM certificate ARN (auto-created)"
+  value       = module.frontend.certificate_arn
 }
 
 output "cloudfront_distribution_id" {
@@ -57,17 +63,7 @@ output "cloudfront_distribution_id" {
   value       = module.frontend.cloudfront_distribution_id
 }
 
-output "website_url" {
-  description = "Website URL with custom domain"
-  value       = module.frontend.website_url
-}
-
-output "certificate_arn" {
-  description = "ACM certificate ARN"
-  value       = module.frontend.certificate_arn
-}
-
-output "artifacts_bucket_name" {
-  description = "Artifacts bucket for build storage"
-  value       = module.frontend.artifacts_bucket_name
+output "s3_bucket_name" {
+  description = "S3 bucket for website files"
+  value       = module.frontend.s3_bucket_name
 }

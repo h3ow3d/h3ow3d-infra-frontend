@@ -1,3 +1,6 @@
+# Basic Example - Frontend hosting without custom domain
+# Uses CloudFront default domain name
+
 terraform {
   required_version = ">= 1.14.1"
 
@@ -13,10 +16,10 @@ provider "aws" {
   region = "eu-west-2"
 }
 
-module "example" {
+module "frontend" {
   source = "../.."
 
-  project_name = "example"
+  project_name = "my-app"
   environment  = "dev"
 
   tags = {
@@ -24,7 +27,22 @@ module "example" {
   }
 }
 
-output "example_output" {
-  description = "Example output from module"
-  value       = module.example
+output "s3_bucket_name" {
+  description = "S3 bucket for website files"
+  value       = module.frontend.s3_bucket_name
+}
+
+output "cloudfront_distribution_id" {
+  description = "CloudFront distribution ID for deployment"
+  value       = module.frontend.cloudfront_distribution_id
+}
+
+output "website_url" {
+  description = "Website URL"
+  value       = module.frontend.website_url
+}
+
+output "artifacts_bucket_name" {
+  description = "Artifacts bucket for build storage"
+  value       = module.frontend.artifacts_bucket_name
 }
