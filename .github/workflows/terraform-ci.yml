@@ -10,7 +10,7 @@ on:
 
 jobs:
   ci:
-    uses: h3ow3d/h3ow3d-github-actions/.github/workflows/terraform-module-ci.yml@main
+    uses: stackgobrr/common-github-actions/.github/workflows/terraform-module-ci.yml@main
     permissions:
       contents: write
       pull-requests: write
@@ -24,7 +24,7 @@ jobs:
   release:
     needs: ci
     if: github.ref == 'refs/heads/main'
-    uses: h3ow3d/h3ow3d-github-actions/.github/workflows/terraform-module-release.yml@main
+    uses: stackgobrr/common-github-actions/.github/workflows/terraform-module-release.yml@main
     permissions:
       contents: write
       pull-requests: none
