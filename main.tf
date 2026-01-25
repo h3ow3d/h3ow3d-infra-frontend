@@ -2,16 +2,17 @@ locals {
   bucket_name = "${var.project_name}-${var.environment}-site"
 
   # Determine certificate ARN: use provided one, or create new one if domain is specified
-  use_custom_domain   = var.domain_name != ""
-  certificate_arn     = var.acm_certificate_arn != null ? var.acm_certificate_arn : (local.use_custom_domain ? aws_acm_certificate.domain[0].arn : null)
-  wait_for_validation = local.use_custom_domain && var.acm_certificate_arn == null
+  use_custom_domain     = var.domain_name != ""
+  certificate_arn       = var.acm_certificate_arn != null ? var.acm_certificate_arn : (local.use_custom_domain ? aws_acm_certificate.domain[0].arn : null)
+  wait_for_validation   = local.use_custom_domain && var.acm_certificate_arn == null
+  effective_domain_name = var.domain_name != "prod" ? "${var.environment}.${var.domain_name}" : var.domain_name
 }
 
 # ACM Certificate for custom domain (created in us-east-1 for CloudFront)
 resource "aws_acm_certificate" "domain" {
   count             = local.use_custom_domain && var.acm_certificate_arn == null ? 1 : 0
   provider          = aws.us_east_1
-  domain_name       = var.domain_name
+  domain_name       = local.effective_domain_name
   validation_method = "DNS"
 
   lifecycle {
@@ -19,7 +20,7 @@ resource "aws_acm_certificate" "domain" {
   }
 
   tags = merge(var.tags, {
-    Name = var.domain_name
+    Name = local.effective_domain_name
   })
 }
 
@@ -98,7 +99,7 @@ resource "aws_s3_bucket_policy" "site" {
 # CloudFront distribution (optional custom domain)
 resource "aws_cloudfront_distribution" "cdn" {
   enabled = true
-  aliases = local.use_custom_domain ? [var.domain_name] : []
+  aliases = local.use_custom_domain ? [local.effective_domain_name] : []
 
   origin {
     domain_name = aws_s3_bucket_website_configuration.site.website_endpoint
@@ -200,7 +201,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 resource "aws_route53_record" "domain" {
   count   = local.use_custom_domain ? 1 : 0
   zone_id = var.hosted_zone_id
-  name    = var.domain_name
+  name    = local.effective_domain_name
   type    = "A"
 
   alias {
