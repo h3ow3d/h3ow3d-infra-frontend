@@ -31,3 +31,32 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "additional_origins" {
+  description = "Additional CloudFront origins (e.g., for Lambda Function URLs or APIs)"
+  type = list(object({
+    origin_id   = string
+    domain_name = string
+    origin_path = optional(string, "")
+    custom_header = optional(list(object({
+      name  = string
+      value = string
+    })), [])
+  }))
+  default = []
+}
+
+variable "additional_cache_behaviors" {
+  description = "Additional CloudFront cache behaviors"
+  type = list(object({
+    path_pattern             = string
+    target_origin_id         = string
+    viewer_protocol_policy   = optional(string, "redirect-to-https")
+    allowed_methods          = optional(list(string), ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"])
+    cached_methods           = optional(list(string), ["GET", "HEAD"])
+    compress                 = optional(bool, true)
+    cache_policy_id          = optional(string)
+    origin_request_policy_id = optional(string)
+  }))
+  default = []
+}

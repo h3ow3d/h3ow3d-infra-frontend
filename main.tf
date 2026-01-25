@@ -112,6 +112,46 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
+  # Additional origins (e.g., Lambda Function URLs)
+  dynamic "origin" {
+    for_each = var.additional_origins
+    content {
+      domain_name = origin.value.domain_name
+      origin_id   = origin.value.origin_id
+      origin_path = origin.value.origin_path
+
+      custom_origin_config {
+        origin_protocol_policy = "https-only"
+        http_port              = 80
+        https_port             = 443
+        origin_ssl_protocols   = ["TLSv1.2"]
+      }
+
+      dynamic "custom_header" {
+        for_each = origin.value.custom_header
+        content {
+          name  = custom_header.value.name
+          value = custom_header.value.value
+        }
+      }
+    }
+  }
+
+  # Additional cache behaviors (must come before default)
+  dynamic "ordered_cache_behavior" {
+    for_each = var.additional_cache_behaviors
+    content {
+      path_pattern             = ordered_cache_behavior.value.path_pattern
+      target_origin_id         = ordered_cache_behavior.value.target_origin_id
+      viewer_protocol_policy   = ordered_cache_behavior.value.viewer_protocol_policy
+      allowed_methods          = ordered_cache_behavior.value.allowed_methods
+      cached_methods           = ordered_cache_behavior.value.cached_methods
+      compress                 = ordered_cache_behavior.value.compress
+      cache_policy_id          = ordered_cache_behavior.value.cache_policy_id
+      origin_request_policy_id = ordered_cache_behavior.value.origin_request_policy_id
+    }
+  }
+
   default_cache_behavior {
     target_origin_id       = "s3-website-${aws_s3_bucket.site.id}"
     viewer_protocol_policy = "redirect-to-https"
