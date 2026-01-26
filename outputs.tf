@@ -37,3 +37,8 @@ output "website_url" {
   description = "URL to access the website"
   value       = local.use_custom_domain ? "https://${var.domain_name}" : "https://${aws_cloudfront_distribution.cdn.domain_name}"
 }
+
+output "cloudfront_logs_bucket_name" {
+  description = "Name of the CloudFront access logs bucket (if logging is enabled)"
+  value       = var.enable_logging ? aws_s3_bucket.cloudfront_logs[0].id : null
+}

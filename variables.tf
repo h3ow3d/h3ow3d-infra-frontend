@@ -60,3 +60,21 @@ variable "additional_cache_behaviors" {
   }))
   default = []
 }
+
+variable "enable_logging" {
+  description = "Enable CloudFront access logging"
+  type        = bool
+  default     = false
+}
+
+variable "logging_prefix" {
+  description = "Prefix for CloudFront access logs"
+  type        = string
+  default     = "cf-logs/"
+}
+
+variable "log_retention_days" {
+  description = "Number of days to retain CloudFront access logs"
+  type        = number
+  default     = 30
+}

@@ -81,9 +81,13 @@ No modules.
 | [aws_route53_record.cert_validation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_route53_record.domain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_s3_bucket.artifacts](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
+| [aws_s3_bucket.cloudfront_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
 | [aws_s3_bucket.site](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
 | [aws_s3_bucket_lifecycle_configuration.artifacts](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_lifecycle_configuration) | resource |
+| [aws_s3_bucket_lifecycle_configuration.cloudfront_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_lifecycle_configuration) | resource |
+| [aws_s3_bucket_ownership_controls.cloudfront_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_ownership_controls) | resource |
 | [aws_s3_bucket_policy.site](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
+| [aws_s3_bucket_public_access_block.cloudfront_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
 | [aws_s3_bucket_public_access_block.site](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
 | [aws_s3_bucket_versioning.artifacts](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
 | [aws_s3_bucket_website_configuration.site](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_website_configuration) | resource |
@@ -97,8 +101,11 @@ No modules.
 | <a name="input_additional_cache_behaviors"></a> [additional\_cache\_behaviors](#input\_additional\_cache\_behaviors) | Additional CloudFront cache behaviors | <pre>list(object({<br/>    path_pattern             = string<br/>    target_origin_id         = string<br/>    viewer_protocol_policy   = optional(string, "redirect-to-https")<br/>    allowed_methods          = optional(list(string), ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"])<br/>    cached_methods           = optional(list(string), ["GET", "HEAD"])<br/>    compress                 = optional(bool, true)<br/>    cache_policy_id          = optional(string)<br/>    origin_request_policy_id = optional(string)<br/>  }))</pre> | `[]` | no |
 | <a name="input_additional_origins"></a> [additional\_origins](#input\_additional\_origins) | Additional CloudFront origins (e.g., for Lambda Function URLs or APIs) | <pre>list(object({<br/>    origin_id   = string<br/>    domain_name = string<br/>    origin_path = optional(string, "")<br/>    custom_header = optional(list(object({<br/>      name  = string<br/>      value = string<br/>    })), [])<br/>  }))</pre> | `[]` | no |
 | <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | Optional custom domain name for CloudFront (e.g., app.example.com) | `string` | `""` | no |
+| <a name="input_enable_logging"></a> [enable\_logging](#input\_enable\_logging) | Enable CloudFront access logging | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name | `string` | n/a | yes |
 | <a name="input_hosted_zone_id"></a> [hosted\_zone\_id](#input\_hosted\_zone\_id) | Route53 hosted zone ID (required if domain\_name is set) | `string` | `""` | no |
+| <a name="input_log_retention_days"></a> [log\_retention\_days](#input\_log\_retention\_days) | Number of days to retain CloudFront access logs | `number` | `30` | no |
+| <a name="input_logging_prefix"></a> [logging\_prefix](#input\_logging\_prefix) | Prefix for CloudFront access logs | `string` | `"cf-logs/"` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Project name used for resource naming | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags | `map(string)` | `{}` | no |
 
@@ -111,6 +118,7 @@ No modules.
 | <a name="output_cloudfront_distribution_id"></a> [cloudfront\_distribution\_id](#output\_cloudfront\_distribution\_id) | CloudFront distribution ID |
 | <a name="output_cloudfront_domain_name"></a> [cloudfront\_domain\_name](#output\_cloudfront\_domain\_name) | CloudFront distribution domain name |
 | <a name="output_cloudfront_hosted_zone_id"></a> [cloudfront\_hosted\_zone\_id](#output\_cloudfront\_hosted\_zone\_id) | CloudFront distribution hosted zone ID |
+| <a name="output_cloudfront_logs_bucket_name"></a> [cloudfront\_logs\_bucket\_name](#output\_cloudfront\_logs\_bucket\_name) | Name of the CloudFront access logs bucket (if logging is enabled) |
 | <a name="output_domain_name"></a> [domain\_name](#output\_domain\_name) | Custom domain name (if configured) |
 | <a name="output_s3_bucket_name"></a> [s3\_bucket\_name](#output\_s3\_bucket\_name) | Name of the S3 bucket for the frontend |
 | <a name="output_website_url"></a> [website\_url](#output\_website\_url) | URL to access the website |
